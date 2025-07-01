@@ -13,7 +13,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.util.List;
+import java.time.format.DateTimeFormatter;
+import java.util.*;
 
 @Controller
 public class MoodController {
@@ -32,29 +33,151 @@ public class MoodController {
 
     @PostMapping("/input-mood")
     public String inputMood(@RequestParam String username,
-                            @RequestParam String mood,
+                            @RequestParam(required = false) String mood,
                             @RequestParam(required = false) String emosiAsli,
-                            @RequestParam(required = false) String note,
+                            @RequestParam String note,
                             Model model) {
         User user = userRepo.findByUsername(username);
         if (user == null) return "redirect:/login";
+        
+        // Urutan logika seperti project sebelumnya:
+        // 1. Deteksi emosi spesifik dari kata kunci terlebih dahulu
+        if (emosiAsli == null || emosiAsli.isEmpty()) {
+            emosiAsli = detectEmotionFromNote(note);
+        }
+        
+        // 2. Jika mood kosong, gunakan analisis sentimen
+        if (mood == null || mood.isEmpty()) {
+            // Jika ada emosi spesifik dari keyword, gunakan itu untuk mood
+            if (emosiAsli != null && !emosiAsli.isEmpty()) {
+                mood = mapEmotionToMood(emosiAsli);
+            } else {
+                // Jika tidak ada keyword, baru gunakan sentiment analysis
+                mood = sentimentService.analyze(note);
+            }
+        }
+        
         Mood m = new Mood();
         m.setUser(user);
         m.setMood(mood);
-        // Jika emosiAsli kosong, analisa otomatis dari note
-        if (emosiAsli == null || emosiAsli.isEmpty()) {
-            emosiAsli = sentimentService.analyze(note);
-        }
         m.setEmosiAsli(emosiAsli);
         m.setNote(note);
         m.setDate(LocalDateTime.now());
         moodRepo.save(m);
-        return "redirect:/dashboard?username=" + username;
+        
+        // Redirect ke halaman hasil mood
+        return "redirect:/mood-result?username=" + username + "&mood=" + mood + "&emosiAsli=" + emosiAsli + "&gender=" + user.getGender() + "&fromInput=true";
+    }
+    
+    private String detectEmotionFromNote(String note) {
+        String lower = note.toLowerCase();
+        
+        // Deteksi emosi spesifik dari kata kunci
+        if (lower.contains("gembira") || lower.contains("bahagia") || lower.contains("senang sekali")) {
+            return "gembira";
+        } else if (lower.contains("sedih") || lower.contains("kecewa") || lower.contains("galau")) {
+            return "sedih";
+        } else if (lower.contains("marah") || lower.contains("kesal") || lower.contains("jengkel")) {
+            return "marah";
+        } else if (lower.contains("cemas") || lower.contains("khawatir") || lower.contains("takut")) {
+            return "cemas";
+        } else if (lower.contains("tenang") || lower.contains("damai") || lower.contains("rileks")) {
+            return "tenang";
+        } else if (lower.contains("bosan") || lower.contains("lelah") || lower.contains("capek")) {
+            return "bosan";
+        } else {
+            return "";
+        }
+    }
+    
+    private String mapEmotionToMood(String emotion) {
+        String emotionLower = emotion.toLowerCase();
+        
+        switch (emotionLower) {
+            case "gembira":
+                return "Very Positive";
+            case "sedih":
+                return "Negative";
+            case "marah":
+                return "Very Negative";
+            case "cemas":
+                return "Negative";
+            case "tenang":
+                return "Positive";
+            case "bosan":
+                return "Neutral";
+            default:
+                return "Neutral";
+        }
+    }
+
+    @GetMapping("/mood-result")
+    public String showMoodResult(@RequestParam String username,
+                                @RequestParam String mood,
+                                @RequestParam String emosiAsli,
+                                @RequestParam String gender,
+                                Model model) {
+        model.addAttribute("username", username);
+        model.addAttribute("mood", mood);
+        model.addAttribute("emosiAsli", emosiAsli);
+        model.addAttribute("gender", gender);
+        
+        // Tentukan karakter image berdasarkan mood dan gender
+        String characterImage = getCharacterImage(mood, gender);
+        model.addAttribute("characterImage", characterImage);
+        
+        // Dapatkan pesan motivasi berdasarkan mood
+        String[] motivationMessage = getMotivationMessage(mood);
+        model.addAttribute("motivationMessage1", motivationMessage[0]);
+        model.addAttribute("motivationMessage2", motivationMessage[1]);
+        
+        return "mood-result";
+    }
+    
+    private String getCharacterImage(String mood, String gender) {
+        String genderSuffix = gender.equalsIgnoreCase("Wanita") ? "_f" : "_m";
+        String moodLower = mood.toLowerCase();
+        
+        if (moodLower.contains("very negative") || moodLower.contains("marah") || moodLower.contains("angry")) {
+            return "/assets/angry" + genderSuffix + ".png";
+        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad")) {
+            return "/assets/sad" + genderSuffix + ".png";
+        } else if (moodLower.contains("neutral") || moodLower.contains("biasa") || moodLower.contains("netral")) {
+            return "/assets/neutral" + genderSuffix + ".png";
+        } else if (moodLower.contains("positive") || moodLower.contains("senang") || moodLower.contains("happy")) {
+            return "/assets/happy" + genderSuffix + ".png";
+        } else if (moodLower.contains("very positive") || moodLower.contains("bahagia") || moodLower.contains("gembira")) {
+            return "/assets/very_happy" + genderSuffix + ".png";
+        } else {
+            return "/assets/neutral" + genderSuffix + ".png";
+        }
+    }
+    
+    private String[] getMotivationMessage(String mood) {
+        String moodLower = mood.toLowerCase();
+        
+        if (moodLower.contains("very positive") || moodLower.contains("gembira") || moodLower.contains("bahagia")) {
+            return new String[]{"Pertahankan semangatmu hari ini!", "Terus tebarkan energi positif ke sekitarmu."};
+        } else if (moodLower.contains("positive") || moodLower.contains("senang") || moodLower.contains("happy")) {
+            return new String[]{"Nikmati hari yang indah ini.", "Syukuri setiap hal kecil hari ini."};
+        } else if (moodLower.contains("neutral") || moodLower.contains("biasa") || moodLower.contains("netral")) {
+            return new String[]{"Hari biasa juga penting untuk istirahat.", "Gunakan waktu ini untuk refleksi diri."};
+        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad")) {
+            return new String[]{"Kamu berharga, apapun yang terjadi.", "Jangan ragu untuk meminta bantuan."};
+        } else if (moodLower.contains("very negative") || moodLower.contains("marah") || moodLower.contains("angry")) {
+            return new String[]{"Tarik napas dalam-dalam, kamu bisa melewati ini.", "Jangan menyerah, hari buruk akan berlalu."};
+        } else {
+            return new String[]{"Semangat menjalani hari!", "Semoga harimu lebih baik dan kamu lebih bahagia."};
+        }
     }
 
     @GetMapping("/riwayat")
     public String riwayat(@RequestParam String username,
                           @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tanggal,
+                          @RequestParam(required = false) Boolean lastResult,
+                          @RequestParam(required = false) String lastMood,
+                          @RequestParam(required = false) String lastEmosiAsli,
+                          @RequestParam(required = false) String lastGender,
                           Model model) {
         User user = userRepo.findByUsername(username);
         List<Mood> moods;
@@ -68,6 +191,61 @@ public class MoodController {
         }
         model.addAttribute("moods", moods);
         model.addAttribute("username", username);
+        
+        // Jika ada lastResult, atur link kembali ke mood-result
+        if (lastResult != null && lastResult) {
+            String backUrl = "/mood-result?username=" + username + "&mood=" + (lastMood != null ? lastMood : "") + 
+                           "&emosiAsli=" + (lastEmosiAsli != null ? lastEmosiAsli : "") + 
+                           "&gender=" + (lastGender != null ? lastGender : "");
+            model.addAttribute("backUrl", backUrl);
+        } else {
+            model.addAttribute("backUrl", "/dashboard?username=" + username);
+        }
+        
         return "riwayat";
+    }
+    
+    @GetMapping("/api/mood-chart-data")
+    @ResponseBody
+    public List<Map<String, Object>> getMoodChartData(@RequestParam String username,
+                                                      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tanggal) {
+        User user = userRepo.findByUsername(username);
+        List<Mood> moods;
+        if (tanggal != null) {
+            moods = moodRepo.findByUserAndDateBetween(user,
+                tanggal.atStartOfDay(),
+                tanggal.plusDays(1).atStartOfDay());
+        } else {
+            moods = moodRepo.findByUser(user);
+        }
+        
+        List<Map<String, Object>> chartData = new ArrayList<>();
+        for (Mood mood : moods) {
+            Map<String, Object> dataPoint = new HashMap<>();
+            dataPoint.put("time", mood.getDate().format(DateTimeFormatter.ofPattern("HH:mm")));
+            dataPoint.put("mood", mood.getMood());
+            dataPoint.put("value", mapMoodToValue(mood.getMood()));
+            dataPoint.put("date", mood.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
+            chartData.add(dataPoint);
+        }
+        
+        return chartData;
+    }
+    
+    private int mapMoodToValue(String mood) {
+        String moodLower = mood.toLowerCase();
+        if (moodLower.contains("very positive") || moodLower.contains("bahagia") || moodLower.contains("gembira")) {
+            return 5;
+        } else if (moodLower.contains("positive") || moodLower.contains("senang") || moodLower.contains("happy")) {
+            return 4;
+        } else if (moodLower.contains("neutral") || moodLower.contains("biasa") || moodLower.contains("netral")) {
+            return 3;
+        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad")) {
+            return 2;
+        } else if (moodLower.contains("very negative") || moodLower.contains("marah") || moodLower.contains("angry")) {
+            return 1;
+        } else {
+            return 3;
+        }
     }
 }

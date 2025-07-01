@@ -12,6 +12,11 @@ public class AuthController {
     @Autowired
     private UserRepository userRepo;
 
+    @GetMapping("/")
+    public String home() {
+        return "redirect:/login";
+    }
+
     @GetMapping("/login")
     public String loginPage() { return "login"; }
 

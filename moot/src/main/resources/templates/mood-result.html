@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Hasil Mood - MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/mood-result.css}"/>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body>
+<div class="container">
+    <header class="header">
+        <div class="header-left">
+            <img th:src="@{/assets/logo.png}" alt="Logo" class="logo"/>
+            <div class="header-text">
+                <h1 class="title">Pencatat Mood Harian</h1>
+                <p class="date" id="currentDate"></p>
+            </div>
+        </div>
+        <div class="header-right">
+            <a th:href="@{/dashboard(username=${username})}" class="btn-action">Catat Mood</a>
+            <a th:href="@{/riwayat(username=${username}, lastResult=true, lastMood=${mood}, lastEmosiAsli=${emosiAsli}, lastGender=${gender})}" class="btn-action">Riwayat Mood</a>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <div class="mood-result-section">
+            <!-- Karakter Visual -->
+            <div class="character-section">
+                <img th:src="@{${characterImage}}" alt="Character" class="character-image"/>
+                <h2 class="mood-label" th:text="${emosiAsli != null && !emosiAsli.isEmpty() ? emosiAsli : mood}"></h2>
+            </div>
+            
+            <!-- Pesan Motivasi -->
+            <div class="motivation-section">
+                <p class="motivation-text primary" th:text="${motivationMessage1}"></p>
+                <p class="motivation-text secondary" th:text="${motivationMessage2}"></p>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+    // Set current date
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        document.getElementById('currentDate').textContent = 
+            today.toLocaleDateString('en-US', options);
+    });
+</script>
+</body>
+</html>

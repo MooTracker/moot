@@ -1,26 +1,64 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Dashboard MoodTracker</title>
-    <link rel="stylesheet" type="text/css" th:href="@{/static/dashboard.css}"/>
+    <title>Dashboard - MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/dashboard.css}"/>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 <div class="container">
-    <h2>Selamat datang, <span th:text="${username}"></span>!</h2>
-    <form th:action="@{/input-mood}" method="post">
-        <input type="hidden" name="username" th:value="${username}" />
-        <label>Mood</label>
-        <input type="text" name="mood" placeholder="Mood hari ini" required/>
-        <label>Emosi Asli</label>
-        <input type="text" name="emosiAsli" placeholder="Emosi asli (opsional)"/>
-        <label>Catatan</label>
-        <input type="text" name="note" placeholder="Catatan (opsional)"/>
-        <button type="submit">Simpan Mood</button>
-    </form>
-    <br/>
-    <a th:href="@{/riwayat(username=${username})}">Lihat Riwayat Mood</a>
-    <a th:href="@{/login}">Logout</a>
+    <header class="header">
+        <div class="header-left">
+            <img th:src="@{/assets/logo.png}" alt="Logo" class="logo"/>
+            <div class="header-text">
+                <h1 class="title">Pencatat Mood Harian</h1>
+                <p class="date" id="currentDate"></p>
+            </div>
+        </div>
+        <div class="header-right">
+            <span class="welcome">Selamat datang, <strong th:text="${username}"></strong>!</span>
+            <a th:href="@{/login}" class="logout-btn">Logout</a>
+        </div>
+    </header>
+    
+    <main class="main-content">
+        <div class="mood-input-section">
+            <div class="section-header">
+                <h2>Bagaimana perasaanmu hari ini?</h2>
+                <a th:href="@{/riwayat(username=${username})}" class="btn-history">
+                    <img th:src="@{/assets/filter.png}" alt="History" class="btn-icon"/>
+                    Riwayat
+                </a>
+            </div>
+            
+            <form th:action="@{/input-mood}" method="post" class="mood-form">
+                <input type="hidden" name="username" th:value="${username}" />
+                
+                <div class="form-group">
+                    <label for="note">Tulis perasaanmu hari ini...</label>
+                    <textarea id="note" name="note" rows="4" placeholder="Ceritakan tentang harimu..." required></textarea>
+                </div>
+                
+                <button type="submit" class="btn-primary">Simpan Mood</button>
+            </form>
+        </div>
+    </main>
 </div>
+
+<script>
+    // Set current date
+    document.addEventListener('DOMContentLoaded', function() {
+        const today = new Date();
+        const options = { 
+            weekday: 'long', 
+            year: 'numeric', 
+            month: 'long', 
+            day: 'numeric' 
+        };
+        document.getElementById('currentDate').textContent = 
+            today.toLocaleDateString('id-ID', options);
+    });
+</script>
 </body>
 </html>

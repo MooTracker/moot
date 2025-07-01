@@ -1,0 +1,264 @@
+body {
+    margin: 0;
+    font-family: 'Comic Sans MS', Arial, sans-serif;
+    background: linear-gradient(to bottom, #78b4ff, #c8dcff);
+    min-height: 100vh;
+    color: #333;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px 30px;
+    border-radius: 15px;
+    margin-bottom: 20px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.header-left .title {
+    font-size: 38px;
+    font-weight: bold;
+    margin: 0;
+    color: #333;
+}
+
+.header-left .subtitle {
+    font-size: 20px;
+    color: #666;
+    margin: 5px 0 0 0;
+}
+
+.header-right {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+}
+
+.filter-icon {
+    width: 40px;
+    height: 40px;
+    cursor: pointer;
+    transition: transform 0.3s;
+}
+
+.filter-icon:hover {
+    transform: scale(1.1);
+}
+
+.btn-back {
+    background: #ffc8d2;
+    color: #333;
+    padding: 12px 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    font-size: 18px;
+    transition: background 0.3s;
+}
+
+.btn-back:hover {
+    background: #ffb3c1;
+}
+
+.filter-section {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.filter-form {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-group {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.filter-group label {
+    font-weight: bold;
+    color: #333;
+}
+
+.filter-group input[type="date"] {
+    padding: 8px 12px;
+    border: 2px solid #ddd;
+    border-radius: 6px;
+    font-size: 14px;
+}
+
+.btn-filter, .btn-reset {
+    padding: 8px 20px;
+    border-radius: 6px;
+    font-weight: bold;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.btn-filter {
+    background: #1e3c78;
+    color: white;
+    border: none;
+}
+
+.btn-filter:hover {
+    background: #2a4a85;
+}
+
+.btn-reset {
+    background: #f0f0f0;
+    color: #333;
+    border: 1px solid #ddd;
+    display: inline-block;
+}
+
+.btn-reset:hover {
+    background: #e0e0e0;
+}
+
+.main-content {
+    background: rgba(255, 255, 255, 0.9);
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+}
+
+.table-container {
+    overflow-x: auto;
+}
+
+.mood-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.mood-table thead {
+    background: #1e3c78;
+    color: white;
+}
+
+.mood-table th {
+    padding: 15px 20px;
+    text-align: left;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.mood-table td {
+    padding: 15px 20px;
+    border-bottom: 1px solid #eee;
+    font-size: 16px;
+}
+
+.mood-row:hover {
+    background: #f8f9fa;
+}
+
+.mood-cell {
+    font-weight: bold;
+    color: #1e3c78;
+}
+
+.emotion-cell {
+    color: #666;
+    font-style: italic;
+}
+
+.note-cell {
+    max-width: 300px;
+    word-wrap: break-word;
+}
+
+.date-cell {
+    color: #666;
+    font-size: 14px;
+}
+
+.empty-row td {
+    text-align: center;
+    padding: 40px 20px;
+}
+
+.empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 20px;
+}
+
+.empty-state p {
+    color: #666;
+    font-size: 18px;
+    margin: 0;
+}
+
+.btn-add-mood {
+    background: #1e3c78;
+    color: white;
+    padding: 12px 25px;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: bold;
+    transition: background 0.3s;
+}
+
+.btn-add-mood:hover {
+    background: #2a4a85;
+}
+
+@media (max-width: 768px) {
+    .header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .filter-form {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .filter-group {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 10px;
+    }
+    
+    .mood-table th,
+    .mood-table td {
+        padding: 10px 8px;
+        font-size: 14px;
+    }
+    
+    .note-cell {
+        max-width: 150px;
+    }
+    
+    .container {
+        padding: 10px;
+    }
+    
+    .main-content {
+        padding: 15px;
+    }
+}

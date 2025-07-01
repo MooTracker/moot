@@ -1,41 +1,213 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Riwayat Mood</title>
-    <link rel="stylesheet" type="text/css" th:href="@{/static/riwayat.css}"/>
+    <title>Riwayat Mood - MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/riwayat.css}"/>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 <div class="container">
-    <h2>Riwayat Mood</h2>
-    <form method="get" th:action="@{/riwayat}">
-        <input type="hidden" name="username" th:value="${username}" />
-        <label>Tanggal: </label>
-        <input type="date" name="tanggal" th:value="${tanggal}" />
-        <button type="submit">Filter</button>
-        <a th:href="@{/dashboard(username=${username})}">Kembali</a>
-    </form>
-    <table>
-        <thead>
-        <tr>
-            <th>Mood</th>
-            <th>Emosi Asli</th>
-            <th>Catatan</th>
-            <th>Tanggal</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr th:each="m : ${moods}">
-            <td th:text="${m.mood}"></td>
-            <td th:text="${m.emosiAsli}"></td>
-            <td th:text="${m.note}"></td>
-            <td th:text="${#temporals.format(m.date, 'yyyy-MM-dd HH:mm')}"></td>
-        </tr>
-        <tr th:if="${#lists.isEmpty(moods)}">
-            <td colspan="4" style="text-align:center;">Belum ada riwayat mood.</td>
-        </tr>
-        </tbody>
-    </table>
+    <header class="header">
+        <div class="header-content">
+            <div class="header-left">
+                <h1 class="title">Riwayat Mood</h1>
+                <p class="subtitle" th:if="${tanggal}">Tanggal: <span th:text="${tanggal}"></span></p>
+                <p class="subtitle" th:unless="${tanggal}">Semua Data</p>
+            </div>
+            <div class="header-right">
+                <a th:href="@{${backUrl}}" class="btn-back">
+                    ← Kembali
+                </a>
+                <button class="btn-view-toggle" onclick="toggleView()">
+                    <span id="viewToggleText">Lihat Grafik</span>
+                </button>
+                <img th:src="@{/assets/filter.png}" alt="Filter" class="filter-icon" onclick="toggleFilter()"/>
+            </div>
+        </div>
+    </header>
+    
+    <div class="filter-section" id="filterSection" style="display: none;">
+        <form method="get" th:action="@{/riwayat}" class="filter-form">
+            <input type="hidden" name="username" th:value="${username}" />
+            <div class="filter-group">
+                <label for="tanggal">Pilih Tanggal:</label>
+                <input type="date" id="tanggal" name="tanggal" th:value="${tanggal}" />
+                <button type="submit" class="btn-filter">Filter</button>
+                <a th:href="@{/riwayat(username=${username})}" class="btn-reset">Reset</a>
+            </div>
+        </form>
+    </div>
+    
+    <main class="main-content">
+        <!-- List View (Default) -->
+        <div class="list-view" id="listView">
+            <div class="notes-container">
+                <div th:each="m : ${moods}" class="note-card" th:onclick="'showNoteDetail(\'' + ${m.id} + '\', \'' + ${m.note} + '\', \'' + ${#temporals.format(m.date, 'dd-MM-yyyy HH:mm')} + '\')'">
+                    <div class="note-content">
+                        <p class="note-text" th:text="${m.note}"></p>
+                        <span class="note-date" th:text="${#temporals.format(m.date, 'dd-MM-yyyy HH:mm')}"></span>
+                    </div>
+                </div>
+                <div th:if="${#lists.isEmpty(moods)}" class="empty-state">
+                    <p>Belum ada catatan mood.</p>
+                    <a th:href="@{/dashboard(username=${username})}" class="btn-add-mood">Tambah Mood Sekarang</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Chart View -->
+        <div class="chart-view" id="chartView" style="display: none;">
+            <div class="chart-container">
+                <canvas id="moodChart" width="800" height="400"></canvas>
+            </div>
+        </div>
+
+        <!-- Note Detail Modal -->
+        <div class="note-detail-modal" id="noteDetailModal" style="display: none;">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h3>Detail Catatan</h3>
+                    <button class="btn-back-to-list" onclick="hideNoteDetail()">← Kembali</button>
+                </div>
+                <div class="modal-body">
+                    <div class="note-detail">
+                        <p id="noteDetailText"></p>
+                        <span id="noteDetailDate" class="note-date"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
 </div>
+
+<script>
+    function toggleFilter() {
+        const filterSection = document.getElementById('filterSection');
+        filterSection.style.display = filterSection.style.display === 'none' ? 'block' : 'none';
+    }
+
+    function toggleView() {
+        const listView = document.getElementById('listView');
+        const chartView = document.getElementById('chartView');
+        const toggleText = document.getElementById('viewToggleText');
+        
+        if (listView.style.display === 'none') {
+            // Switch to list view
+            listView.style.display = 'block';
+            chartView.style.display = 'none';
+            toggleText.textContent = 'Lihat Grafik';
+        } else {
+            // Switch to chart view
+            listView.style.display = 'none';
+            chartView.style.display = 'block';
+            toggleText.textContent = 'Lihat Catatan';
+            drawMoodChart();
+        }
+    }
+
+    function showNoteDetail(id, noteText, noteDate) {
+        document.getElementById('noteDetailText').textContent = noteText;
+        document.getElementById('noteDetailDate').textContent = noteDate;
+        document.getElementById('noteDetailModal').style.display = 'flex';
+    }
+
+    function hideNoteDetail() {
+        document.getElementById('noteDetailModal').style.display = 'none';
+    }
+
+    function drawMoodChart() {
+        const canvas = document.getElementById('moodChart');
+        const ctx = canvas.getContext('2d');
+        
+        // Clear canvas
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Get data from server
+        const username = new URLSearchParams(window.location.search).get('username');
+        const tanggal = new URLSearchParams(window.location.search).get('tanggal');
+        
+        let url = `/api/mood-chart-data?username=${username}`;
+        if (tanggal) {
+            url += `&tanggal=${tanggal}`;
+        }
+        
+        fetch(url)
+            .then(response => response.json())
+            .then(moods => {
+                if (moods.length === 0) {
+                    // Show empty state
+                    ctx.fillStyle = '#666';
+                    ctx.font = '16px Comic Sans MS';
+                    ctx.textAlign = 'center';
+                    ctx.fillText('Tidak ada data untuk ditampilkan', canvas.width/2, canvas.height/2);
+                    return;
+                }
+                
+                // Chart dimensions
+                const padding = 60;
+                const chartWidth = canvas.width - 2 * padding;
+                const chartHeight = canvas.height - 2 * padding;
+                
+                // Y-axis labels
+                const yLabels = ['MARAH', 'SEDIH', '', 'TERPAKSA BAHAGIA', 'BAHAGIA'];
+                const barWidth = chartWidth / moods.length;
+                
+                // Draw Y-axis
+                ctx.strokeStyle = '#ff6b47';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, padding + chartHeight);
+                ctx.stroke();
+                
+                // Draw X-axis
+                ctx.beginPath();
+                ctx.moveTo(padding, padding + chartHeight);
+                ctx.lineTo(padding + chartWidth, padding + chartHeight);
+                ctx.stroke();
+                
+                // Draw Y-axis labels
+                ctx.fillStyle = '#333';
+                ctx.font = '12px Comic Sans MS';
+                ctx.textAlign = 'right';
+                yLabels.forEach((label, index) => {
+                    const y = padding + chartHeight - (index * chartHeight / 4);
+                    ctx.fillText(label, padding - 10, y + 5);
+                });
+                
+                // Draw bars and X-axis labels
+                ctx.fillStyle = '#2c3e50';
+                ctx.textAlign = 'center';
+                moods.forEach((mood, index) => {
+                    const x = padding + index * barWidth + barWidth/4;
+                    const barHeight = (mood.value / 5) * chartHeight;
+                    const y = padding + chartHeight - barHeight;
+                    
+                    // Draw bar
+                    ctx.fillRect(x, y, barWidth/2, barHeight);
+                    
+                    // Draw X-axis label
+                    ctx.font = '10px Comic Sans MS';
+                    ctx.fillText(mood.time, x + barWidth/4, padding + chartHeight + 20);
+                });
+            })
+            .catch(error => {
+                console.error('Error fetching chart data:', error);
+                ctx.fillStyle = '#666';
+                ctx.font = '16px Comic Sans MS';
+                ctx.textAlign = 'center';
+                ctx.fillText('Error loading chart data', canvas.width/2, canvas.height/2);
+            });
+    }
+
+    // Close modal when clicking outside
+    window.onclick = function(event) {
+        const modal = document.getElementById('noteDetailModal');
+        if (event.target === modal) {
+            hideNoteDetail();
+        }
+    }
+</script>
 </body>
 </html>

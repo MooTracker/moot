@@ -1,22 +1,50 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org">
 <head>
-    <title>Register MoodTracker</title>
-    <link rel="stylesheet" type="text/css" th:href="@{/static/register.css}"/>
+    <title>Register - MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/register.css}"/>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
 <body>
 <div class="container">
-    <h2>Register MoodTracker</h2>
-    <form th:action="@{/register}" method="post">
-        <input type="text" name="username" placeholder="Username" required/><br/>
-        <input type="password" name="password" placeholder="Password" required/><br/>
-        <input type="text" name="gender" placeholder="Gender (opsional)"/><br/>
-        <button type="submit">Register</button>
-        <div class="msg" th:if="${error}" th:text="${error}"></div>
-        <div class="msg" style="color:green" th:if="${success}" th:text="${success}"></div>
-    </form>
-    <a th:href="@{/login}">Sudah punya akun? Login</a>
+    <div class="register-panel">
+        <div class="logo">
+            <img th:src="@{/assets/logo.png}" alt="Logo" class="logo-img"/>
+        </div>
+        
+        <h2 class="title">Buat Akun</h2>
+        
+        <form th:action="@{/register}" method="post">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" id="password" name="password" required/>
+            </div>
+            
+            <div class="form-group">
+                <label for="gender">Jenis Kelamin</label>
+                <select id="gender" name="gender" required>
+                    <option value="">Pilih Gender</option>
+                    <option value="Pria">Pria</option>
+                    <option value="Wanita">Wanita</option>
+                </select>
+            </div>
+            
+            <button type="submit" class="btn-primary">Register</button>
+            
+            <div class="error-msg" th:if="${error}" th:text="${error}"></div>
+            <div class="success-msg" th:if="${success}" th:text="${success}"></div>
+        </form>
+        
+        <div class="login-link">
+            <a th:href="@{/login}">Sudah punya akun? Login</a>
+        </div>
+    </div>
 </div>
 </body>
 </html>
