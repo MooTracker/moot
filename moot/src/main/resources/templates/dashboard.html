@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Dashboard MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/dashboard.css}"/>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div class="container">
+    <h2>Selamat datang, <span th:text="${username}"></span>!</h2>
+    <form th:action="@{/input-mood}" method="post">
+        <input type="hidden" name="username" th:value="${username}" />
+        <label>Mood</label>
+        <input type="text" name="mood" placeholder="Mood hari ini" required/>
+        <label>Emosi Asli</label>
+        <input type="text" name="emosiAsli" placeholder="Emosi asli (opsional)"/>
+        <label>Catatan</label>
+        <input type="text" name="note" placeholder="Catatan (opsional)"/>
+        <button type="submit">Simpan Mood</button>
+    </form>
+    <br/>
+    <a th:href="@{/riwayat(username=${username})}">Lihat Riwayat Mood</a>
+    <a th:href="@{/login}">Logout</a>
+</div>
+</body>
+</html>

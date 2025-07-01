@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Login MoodTracker</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/login.css}"/>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div class="container">
+    <h2>Login MoodTracker</h2>
+    <form th:action="@{/login}" method="post">
+        <input type="text" name="username" placeholder="Username" required/><br/>
+        <input type="password" name="password" placeholder="Password" required/><br/>
+        <button type="submit">Login</button>
+        <div class="msg" th:if="${error}" th:text="${error}"></div>
+        <div class="msg" style="color:green" th:if="${success}" th:text="${success}"></div>
+    </form>
+    <a th:href="@{/register}">Belum punya akun? Register</a>
+</div>
+</body>
+</html>

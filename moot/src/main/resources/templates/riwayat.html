@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <title>Riwayat Mood</title>
+    <link rel="stylesheet" type="text/css" th:href="@{/static/riwayat.css}"/>
+    <meta charset="UTF-8">
+</head>
+<body>
+<div class="container">
+    <h2>Riwayat Mood</h2>
+    <form method="get" th:action="@{/riwayat}">
+        <input type="hidden" name="username" th:value="${username}" />
+        <label>Tanggal: </label>
+        <input type="date" name="tanggal" th:value="${tanggal}" />
+        <button type="submit">Filter</button>
+        <a th:href="@{/dashboard(username=${username})}">Kembali</a>
+    </form>
+    <table>
+        <thead>
+        <tr>
+            <th>Mood</th>
+            <th>Emosi Asli</th>
+            <th>Catatan</th>
+            <th>Tanggal</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="m : ${moods}">
+            <td th:text="${m.mood}"></td>
+            <td th:text="${m.emosiAsli}"></td>
+            <td th:text="${m.note}"></td>
+            <td th:text="${#temporals.format(m.date, 'yyyy-MM-dd HH:mm')}"></td>
+        </tr>
+        <tr th:if="${#lists.isEmpty(moods)}">
+            <td colspan="4" style="text-align:center;">Belum ada riwayat mood.</td>
+        </tr>
+        </tbody>
+    </table>
+</div>
+</body>
+</html>
