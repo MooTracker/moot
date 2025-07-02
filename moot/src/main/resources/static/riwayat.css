@@ -165,13 +165,14 @@ body {
     padding: 15px 12px;
     text-align: left;
     font-weight: 600;
-    font-size: 14px;
+    font-size: 16px;
 }
 
 .mood-table td {
-    padding: 12px;
+    padding: 15px 12px;
     border-bottom: 1px solid #eee;
     font-size: 14px;
+    vertical-align: top;
 }
 
 .mood-row:hover {
@@ -181,21 +182,27 @@ body {
 .mood-cell {
     font-weight: 600;
     color: #667eea;
+    max-width: 120px;
 }
 
 .emotion-cell {
     color: #764ba2;
     font-style: italic;
+    font-weight: 500;
+    max-width: 100px;
 }
 
 .note-cell {
-    max-width: 300px;
+    max-width: 400px;
     word-wrap: break-word;
+    line-height: 1.4;
 }
 
 .date-cell {
     color: #666;
     font-size: 12px;
+    font-weight: 500;
+    min-width: 130px;
 }
 
 .empty-state {

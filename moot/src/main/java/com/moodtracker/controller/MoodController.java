@@ -53,7 +53,14 @@ public class MoodController {
                 mood = mapEmotionToMood(emosiAsli);
             } else {
                 // Jika tidak ada keyword, baru gunakan sentiment analysis
-                mood = sentimentService.analyze(note);
+                try {
+                    mood = sentimentService.analyze(note);
+                    if (mood == null || mood.equals("Unknown")) {
+                        mood = "Neutral"; // fallback
+                    }
+                } catch (Exception e) {
+                    mood = "Neutral"; // fallback jika API error
+                }
             }
         }
         
@@ -65,8 +72,12 @@ public class MoodController {
         m.setDate(LocalDateTime.now());
         moodRepo.save(m);
         
-        // Redirect ke halaman hasil mood
-        return "redirect:/mood-result?username=" + username + "&mood=" + mood + "&emosiAsli=" + emosiAsli + "&gender=" + user.getGender() + "&fromInput=true";
+        // Redirect ke halaman hasil mood dengan parameter yang aman
+        StringBuilder redirectUrl = new StringBuilder("redirect:/mood-result?username=" + username + "&mood=" + mood + "&gender=" + user.getGender());
+        if (emosiAsli != null && !emosiAsli.isEmpty()) {
+            redirectUrl.append("&emosiAsli=").append(emosiAsli);
+        }
+        return redirectUrl.toString();
     }
     
     private String detectEmotionFromNote(String note) {
@@ -114,24 +125,41 @@ public class MoodController {
     @GetMapping("/mood-result")
     public String showMoodResult(@RequestParam String username,
                                 @RequestParam String mood,
-                                @RequestParam String emosiAsli,
+                                @RequestParam(required = false) String emosiAsli,
                                 @RequestParam String gender,
                                 Model model) {
-        model.addAttribute("username", username);
-        model.addAttribute("mood", mood);
-        model.addAttribute("emosiAsli", emosiAsli);
-        model.addAttribute("gender", gender);
-        
-        // Tentukan karakter image berdasarkan mood dan gender
-        String characterImage = getCharacterImage(mood, gender);
-        model.addAttribute("characterImage", characterImage);
-        
-        // Dapatkan pesan motivasi berdasarkan mood
-        String[] motivationMessage = getMotivationMessage(mood);
-        model.addAttribute("motivationMessage1", motivationMessage[0]);
-        model.addAttribute("motivationMessage2", motivationMessage[1]);
-        
-        return "mood-result";
+        try {
+            // Handle null/empty values
+            if (emosiAsli == null) emosiAsli = "";
+            if (mood == null) mood = "Neutral";
+            if (gender == null) gender = "Pria";
+            
+            System.out.println("DEBUG - Username: " + username);
+            System.out.println("DEBUG - Mood: " + mood);
+            System.out.println("DEBUG - EmosiAsli: " + emosiAsli);
+            System.out.println("DEBUG - Gender: " + gender);
+            
+            model.addAttribute("username", username);
+            model.addAttribute("mood", mood);
+            model.addAttribute("emosiAsli", emosiAsli);
+            model.addAttribute("gender", gender);
+            
+            // Tentukan karakter image berdasarkan mood dan gender
+            String characterImage = getCharacterImage(mood, gender);
+            model.addAttribute("characterImage", characterImage);
+            System.out.println("DEBUG - Character Image: " + characterImage);
+            
+            // Dapatkan pesan motivasi berdasarkan mood
+            String[] motivationMessage = getMotivationMessage(mood);
+            model.addAttribute("motivationMessage1", motivationMessage[0]);
+            model.addAttribute("motivationMessage2", motivationMessage[1]);
+            System.out.println("DEBUG - Motivation: " + motivationMessage[0]);
+            
+            return "mood-result";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/dashboard?username=" + username;
+        }
     }
     
     private String getCharacterImage(String mood, String gender) {
@@ -162,7 +190,7 @@ public class MoodController {
             return new String[]{"Nikmati hari yang indah ini.", "Syukuri setiap hal kecil hari ini."};
         } else if (moodLower.contains("neutral") || moodLower.contains("biasa") || moodLower.contains("netral")) {
             return new String[]{"Hari biasa juga penting untuk istirahat.", "Gunakan waktu ini untuk refleksi diri."};
-        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad")) {
+        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad") || moodLower.contains("cemas")) {
             return new String[]{"Kamu berharga, apapun yang terjadi.", "Jangan ragu untuk meminta bantuan."};
         } else if (moodLower.contains("very negative") || moodLower.contains("marah") || moodLower.contains("angry")) {
             return new String[]{"Tarik napas dalam-dalam, kamu bisa melewati ini.", "Jangan menyerah, hari buruk akan berlalu."};
@@ -179,57 +207,52 @@ public class MoodController {
                           @RequestParam(required = false) String lastEmosiAsli,
                           @RequestParam(required = false) String lastGender,
                           Model model) {
-        User user = userRepo.findByUsername(username);
-        List<Mood> moods;
-        if (tanggal != null) {
-            moods = moodRepo.findByUserAndDateBetween(user,
-                tanggal.atStartOfDay(),
-                tanggal.plusDays(1).atStartOfDay());
-            model.addAttribute("tanggal", tanggal.toString());
-        } else {
-            moods = moodRepo.findByUser(user);
+        try {
+            User user = userRepo.findByUsername(username);
+            if (user == null) {
+                return "redirect:/login";
+            }
+            
+            List<Mood> moods = new ArrayList<>();
+            if (tanggal != null) {
+                moods = moodRepo.findByUserAndDateBetween(user,
+                    tanggal.atStartOfDay(),
+                    tanggal.plusDays(1).atStartOfDay());
+                model.addAttribute("tanggal", tanggal.toString());
+            } else {
+                moods = moodRepo.findByUser(user);
+            }
+            
+            // Handle null moods
+            if (moods == null) {
+                moods = new ArrayList<>();
+            }
+            
+            model.addAttribute("moods", moods);
+            model.addAttribute("username", username);
+            
+            // Jika ada lastResult, atur link kembali ke mood-result
+            if (lastResult != null && lastResult) {
+                StringBuilder backUrl = new StringBuilder("/mood-result?username=" + username);
+                if (lastMood != null && !lastMood.isEmpty()) {
+                    backUrl.append("&mood=").append(lastMood);
+                }
+                if (lastEmosiAsli != null && !lastEmosiAsli.isEmpty()) {
+                    backUrl.append("&emosiAsli=").append(lastEmosiAsli);
+                }
+                if (lastGender != null && !lastGender.isEmpty()) {
+                    backUrl.append("&gender=").append(lastGender);
+                }
+                model.addAttribute("backUrl", backUrl.toString());
+            } else {
+                model.addAttribute("backUrl", "/dashboard?username=" + username);
+            }
+            
+            return "riwayat";
+        } catch (Exception e) {
+            e.printStackTrace();
+            return "redirect:/dashboard?username=" + username;
         }
-        model.addAttribute("moods", moods);
-        model.addAttribute("username", username);
-        
-        // Jika ada lastResult, atur link kembali ke mood-result
-        if (lastResult != null && lastResult) {
-            String backUrl = "/mood-result?username=" + username + "&mood=" + (lastMood != null ? lastMood : "") + 
-                           "&emosiAsli=" + (lastEmosiAsli != null ? lastEmosiAsli : "") + 
-                           "&gender=" + (lastGender != null ? lastGender : "");
-            model.addAttribute("backUrl", backUrl);
-        } else {
-            model.addAttribute("backUrl", "/dashboard?username=" + username);
-        }
-        
-        return "riwayat";
-    }
-    
-    @GetMapping("/api/mood-chart-data")
-    @ResponseBody
-    public List<Map<String, Object>> getMoodChartData(@RequestParam String username,
-                                                      @RequestParam(required = false) @DateTimeFormat(pattern = "yyyy-MM-dd") LocalDate tanggal) {
-        User user = userRepo.findByUsername(username);
-        List<Mood> moods;
-        if (tanggal != null) {
-            moods = moodRepo.findByUserAndDateBetween(user,
-                tanggal.atStartOfDay(),
-                tanggal.plusDays(1).atStartOfDay());
-        } else {
-            moods = moodRepo.findByUser(user);
-        }
-        
-        List<Map<String, Object>> chartData = new ArrayList<>();
-        for (Mood mood : moods) {
-            Map<String, Object> dataPoint = new HashMap<>();
-            dataPoint.put("time", mood.getDate().format(DateTimeFormatter.ofPattern("HH:mm")));
-            dataPoint.put("mood", mood.getMood());
-            dataPoint.put("value", mapMoodToValue(mood.getMood()));
-            dataPoint.put("date", mood.getDate().format(DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm")));
-            chartData.add(dataPoint);
-        }
-        
-        return chartData;
     }
     
     private int mapMoodToValue(String mood) {

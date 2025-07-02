@@ -17,8 +17,8 @@
             </div>
         </div>
         <div class="header-right">
-            <a th:href="@{/dashboard(username=${username})}" class="btn-action">Catat Mood</a>
-            <a th:href="@{/riwayat(username=${username}, lastResult=true, lastMood=${mood}, lastEmosiAsli=${emosiAsli}, lastGender=${gender})}" class="btn-action">Riwayat Mood</a>
+            <a th:href="@{'/dashboard?username=' + ${username}}" class="btn-action">Catat Mood</a>
+            <a th:href="@{/riwayat(username=${username}, lastResult=true, lastMood=${mood}, lastEmosiAsli=${emosiAsli != null ? emosiAsli : ''}, lastGender=${gender})}" class="btn-action">Riwayat Mood</a>
         </div>
     </header>
     

@@ -60,11 +60,11 @@ body {
 .btn-action {
     background: #ffc8d2;
     color: #333;
-    padding: 12px 25px;
+    padding: 10px 20px;
     border-radius: 8px;
     text-decoration: none;
-    font-weight: bold;
-    font-size: 16px;
+    font-weight: 500;
+    font-size: 14px;
     transition: background 0.3s;
     border: none;
     cursor: pointer;
