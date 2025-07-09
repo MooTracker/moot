@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 @Controller
@@ -73,28 +72,41 @@ public class MoodController {
         moodRepo.save(m);
         
         // Redirect ke halaman hasil mood dengan parameter yang aman
-        StringBuilder redirectUrl = new StringBuilder("redirect:/mood-result?username=" + username + "&mood=" + mood + "&gender=" + user.getGender());
-        if (emosiAsli != null && !emosiAsli.isEmpty()) {
-            redirectUrl.append("&emosiAsli=").append(emosiAsli);
+        try {
+            StringBuilder redirectUrl = new StringBuilder("redirect:/mood-result?username=" + 
+                java.net.URLEncoder.encode(username, "UTF-8") + 
+                "&mood=" + java.net.URLEncoder.encode(mood, "UTF-8") + 
+                "&gender=" + java.net.URLEncoder.encode(user.getGender(), "UTF-8"));
+            if (emosiAsli != null && !emosiAsli.isEmpty()) {
+                redirectUrl.append("&emosiAsli=").append(java.net.URLEncoder.encode(emosiAsli, "UTF-8"));
+            }
+            return redirectUrl.toString();
+        } catch (Exception e) {
+            return "redirect:/mood-result?username=" + username + "&mood=" + mood + "&gender=" + user.getGender();
         }
-        return redirectUrl.toString();
     }
     
     private String detectEmotionFromNote(String note) {
         String lower = note.toLowerCase();
         
-        // Deteksi emosi spesifik dari kata kunci
-        if (lower.contains("gembira") || lower.contains("bahagia") || lower.contains("senang sekali")) {
+        // Deteksi emosi spesifik dari kata kunci (lebih banyak variasi)
+        if (lower.contains("gembira") || lower.contains("bahagia") || lower.contains("senang sekali") || 
+            lower.contains("excited") || lower.contains("antusias") || lower.contains("sangat senang")) {
             return "gembira";
-        } else if (lower.contains("sedih") || lower.contains("kecewa") || lower.contains("galau")) {
+        } else if (lower.contains("sedih") || lower.contains("kecewa") || lower.contains("galau") || 
+                   lower.contains("terpuruk") || lower.contains("down") || lower.contains("murung")) {
             return "sedih";
-        } else if (lower.contains("marah") || lower.contains("kesal") || lower.contains("jengkel")) {
+        } else if (lower.contains("marah") || lower.contains("kesal") || lower.contains("jengkel") || 
+                   lower.contains("benci") || lower.contains("dongkol") || lower.contains("emosi")) {
             return "marah";
-        } else if (lower.contains("cemas") || lower.contains("khawatir") || lower.contains("takut")) {
+        } else if (lower.contains("cemas") || lower.contains("khawatir") || lower.contains("takut") || 
+                   lower.contains("stress") || lower.contains("tegang") || lower.contains("gelisah")) {
             return "cemas";
-        } else if (lower.contains("tenang") || lower.contains("damai") || lower.contains("rileks")) {
+        } else if (lower.contains("tenang") || lower.contains("damai") || lower.contains("rileks") || 
+                   lower.contains("santai") || lower.contains("nyaman") || lower.contains("adem")) {
             return "tenang";
-        } else if (lower.contains("bosan") || lower.contains("lelah") || lower.contains("capek")) {
+        } else if (lower.contains("bosan") || lower.contains("lelah") || lower.contains("capek") || 
+                   lower.contains("mager") || lower.contains("males") || lower.contains("jenuh")) {
             return "bosan";
         } else {
             return "";
@@ -129,15 +141,33 @@ public class MoodController {
                                 @RequestParam String gender,
                                 Model model) {
         try {
-            // Handle null/empty values
+            // Handle null/empty values dan decode URL
             if (emosiAsli == null) emosiAsli = "";
             if (mood == null) mood = "Neutral";
             if (gender == null) gender = "Pria";
+            
+            // Decode URL parameters jika ada encoding
+            try {
+                mood = java.net.URLDecoder.decode(mood, "UTF-8");
+                if (!emosiAsli.isEmpty()) {
+                    emosiAsli = java.net.URLDecoder.decode(emosiAsli, "UTF-8");
+                }
+                gender = java.net.URLDecoder.decode(gender, "UTF-8");
+                username = java.net.URLDecoder.decode(username, "UTF-8");
+            } catch (Exception e) {
+                // Jika decode gagal, gunakan nilai asli
+            }
             
             System.out.println("DEBUG - Username: " + username);
             System.out.println("DEBUG - Mood: " + mood);
             System.out.println("DEBUG - EmosiAsli: " + emosiAsli);
             System.out.println("DEBUG - Gender: " + gender);
+            
+            // Validasi user exists
+            User user = userRepo.findByUsername(username);
+            if (user == null) {
+                return "redirect:/login";
+            }
             
             model.addAttribute("username", username);
             model.addAttribute("mood", mood);
@@ -233,17 +263,22 @@ public class MoodController {
             
             // Jika ada lastResult, atur link kembali ke mood-result
             if (lastResult != null && lastResult) {
-                StringBuilder backUrl = new StringBuilder("/mood-result?username=" + username);
-                if (lastMood != null && !lastMood.isEmpty()) {
-                    backUrl.append("&mood=").append(lastMood);
+                try {
+                    StringBuilder backUrl = new StringBuilder("/mood-result?username=" + 
+                        java.net.URLEncoder.encode(username, "UTF-8"));
+                    if (lastMood != null && !lastMood.isEmpty()) {
+                        backUrl.append("&mood=").append(java.net.URLEncoder.encode(lastMood, "UTF-8"));
+                    }
+                    if (lastEmosiAsli != null && !lastEmosiAsli.isEmpty()) {
+                        backUrl.append("&emosiAsli=").append(java.net.URLEncoder.encode(lastEmosiAsli, "UTF-8"));
+                    }
+                    if (lastGender != null && !lastGender.isEmpty()) {
+                        backUrl.append("&gender=").append(java.net.URLEncoder.encode(lastGender, "UTF-8"));
+                    }
+                    model.addAttribute("backUrl", backUrl.toString());
+                } catch (Exception e) {
+                    model.addAttribute("backUrl", "/dashboard?username=" + username);
                 }
-                if (lastEmosiAsli != null && !lastEmosiAsli.isEmpty()) {
-                    backUrl.append("&emosiAsli=").append(lastEmosiAsli);
-                }
-                if (lastGender != null && !lastGender.isEmpty()) {
-                    backUrl.append("&gender=").append(lastGender);
-                }
-                model.addAttribute("backUrl", backUrl.toString());
             } else {
                 model.addAttribute("backUrl", "/dashboard?username=" + username);
             }
@@ -255,20 +290,4 @@ public class MoodController {
         }
     }
     
-    private int mapMoodToValue(String mood) {
-        String moodLower = mood.toLowerCase();
-        if (moodLower.contains("very positive") || moodLower.contains("bahagia") || moodLower.contains("gembira")) {
-            return 5;
-        } else if (moodLower.contains("positive") || moodLower.contains("senang") || moodLower.contains("happy")) {
-            return 4;
-        } else if (moodLower.contains("neutral") || moodLower.contains("biasa") || moodLower.contains("netral")) {
-            return 3;
-        } else if (moodLower.contains("negative") || moodLower.contains("sedih") || moodLower.contains("sad")) {
-            return 2;
-        } else if (moodLower.contains("very negative") || moodLower.contains("marah") || moodLower.contains("angry")) {
-            return 1;
-        } else {
-            return 3;
-        }
-    }
 }
