@@ -1,3 +1,18 @@
+# MOODTRACKER WEB APP
+
+## DESKRIPSI
+MoodTracker adalah aplikasi web untuk mencatat, memantau, dan menganalisis mood harian pengguna. Aplikasi ini membantu pengguna memahami pola suasana hati, mendapatkan motivasi, serta melihat perkembangan mood dari waktu ke waktu. MoodTracker juga dilengkapi fitur analisis otomatis menggunakan AI untuk mendeteksi sentimen dan emosi dari catatan harian.
+
+### Kegunaan Utama
+- Mencatat mood dan perasaan harian secara digital
+- Melihat riwayat mood
+- Mendapatkan motivasi dan visualisasi karakter berdasarkan mood
+- Analisis otomatis sentimen dan emosi menggunakan AI
+- Filter riwayat berdasarkan tanggal
+
+### Target Pengguna
+Aplikasi ini cocok untuk siapa saja yang ingin lebih sadar dan teratur dalam memantau kesehatan mental, baik pelajar, pekerja, maupun umum.
+
 # PANDUAN MENJALANKAN MOODTRACKER
 
 ## PERSIAPAN
@@ -36,7 +51,7 @@
 2. **Dashboard** - Input catatan mood harian
 3. **Analisis Otomatis** - Deteksi sentiment dan emosi dari catatan
 4. **Hasil Mood** - Tampilan karakter visual dan motivasi
-5. **Riwayat** - List catatan dan grafik mood
+5. **Riwayat** - List catatan mood
 6. **Filter** - Filter riwayat berdasarkan tanggal
 
 ## TROUBLESHOOTING
